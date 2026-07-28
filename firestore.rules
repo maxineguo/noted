@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Every user's own notebooks and profile (API key, avatar) — only they can read or write it.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Shared notebooks: anyone with the code can read (that's the whole point of sharing), but
+    // only a signed-in user can create/update/delete one — and only the Learn+Creation fields
+    // ever land here in the first place (enforced client-side in sharing.js).
+    match /shared_notebooks/{code} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
